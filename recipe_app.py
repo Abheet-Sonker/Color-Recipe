@@ -50,7 +50,7 @@ def load_model(L, a, b):
         return joblib.load("Yellow_Family.pkl"), joblib.load("Scaler_Yellow.pkl"), "Yellow"
     
     # PURPLE: Dark violets to reddish-purples
-    elif 20 <= L <= 60 and 20 <= a <= 60 and -50 <= b <= -5:
+    elif 20 <= L <= 80 and 20 <= a <= 60 and -50 <= b <= -5:
         return joblib.load("Purple_Family.pkl"), joblib.load("Scaler_Purple.pkl"), "Purple"
     
     # BROWN: Dark oranges/yellows with lower lightness
