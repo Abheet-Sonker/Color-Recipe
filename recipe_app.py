@@ -31,47 +31,47 @@ def extract_avg_lab(pil_image):
 def load_model(L, a, b):
     # RED: Medium to dark red tones
     if 30 <= L <= 70 and 40 <= a <= 80 and -10 <= b <= 30:
-        return joblib.load("Red_Family.pkl"), joblib.load("scaler_Red.pkl"), "Red"
+        return joblib.load("Red_Family.pkl"), joblib.load("Scaler_Red.pkl"), "Red"
     
     # ORANGE: Bright warm tones
     elif 40 <= L <= 85 and 15 <= a <= 45 and 30 <= b <= 70:
-        return joblib.load("Orange_Family.pkl"), joblib.load("scaler_Orange.pkl"), "Orange"
+        return joblib.load("Orange_Family.pkl"), joblib.load("Scaler_Orange.pkl"), "Orange"
     
     # GREEN: All tones of green
     elif 30 <= L <= 85 and -80 <= a <= -10 and -20 <= b <= 30:
-        return joblib.load("Green_Family.pkl"), joblib.load("scaler_Green.pkl"), "Green"
+        return joblib.load("Green_Family.pkl"), joblib.load("Scaler_Green.pkl"), "Green"
     
     # BLUE: Deep to lighter blues
     elif 20 <= L <= 70 and -20 <= a <= 20 and -80 <= b <= -10:
-        return joblib.load("Blue_Family.pkl"), joblib.load("scaler_Blue.pkl"), "Blue"
+        return joblib.load("Blue_Family.pkl"), joblib.load("Scaler_Blue.pkl"), "Blue"
     
     # YELLOW: Pale to deep yellows
     elif 60 <= L <= 100 and -15 <= a <= 30 and 40 <= b <= 80:
-        return joblib.load("Yellow_Family.pkl"), joblib.load("scaler_Yellow.pkl"), "Yellow"
+        return joblib.load("Yellow_Family.pkl"), joblib.load("Scaler_Yellow.pkl"), "Yellow"
     
     # PURPLE: Dark violets to reddish-purples
     elif 20 <= L <= 60 and 20 <= a <= 60 and -50 <= b <= -5:
-        return joblib.load("Purple_Family.pkl"), joblib.load("scaler_Purple.pkl"), "Purple"
+        return joblib.load("Purple_Family.pkl"), joblib.load("Scaler_Purple.pkl"), "Purple"
     
     # BROWN: Dark oranges/yellows with lower lightness
     elif 20 <= L <= 55 and 10 <= a <= 30 and 10 <= b <= 40:
-        return joblib.load("Brown_Family.pkl"), joblib.load("scaler_Brown.pkl"), "Brown"
+        return joblib.load("Brown_Family.pkl"), joblib.load("Scaler_Brown.pkl"), "Brown"
     
     # PINK: Light reds, high L, positive a
     elif 65 <= L <= 100 and 20 <= a <= 50 and 0 <= b <= 30:
-        return joblib.load("Pink_Family.pkl"), joblib.load("scaler_Pink.pkl"), "Pink"
+        return joblib.load("Pink_Family.pkl"), joblib.load("Scaler_Pink.pkl"), "Pink"
     
     # GRAY: Low chroma (a, b near 0)
     elif 25 <= L <= 90 and -5 <= a <= 5 and -5 <= b <= 5:
-        return joblib.load("Gray_Family.pkl"), joblib.load("scaler_Gray.pkl"), "Gray"
+        return joblib.load("Gray_Family.pkl"), joblib.load("Scaler_Gray.pkl"), "Gray"
     
     # BLACK: Very low lightness, near neutral
     elif 0 <= L <= 25 and -10 <= a <= 10 and -10 <= b <= 10:
-        return joblib.load("Black_Family.pkl"), joblib.load("scaler_Black.pkl"), "Black"
+        return joblib.load("Black_Family.pkl"), joblib.load("Scaler_Black.pkl"), "Black"
     
     # WHITE: Very high lightness, low chroma
     elif 90 <= L <= 100 and -5 <= a <= 5 and -5 <= b <= 5:
-        return joblib.load("White_Family.pkl"), joblib.load("scaler_White.pkl"), "White"
+        return joblib.load("White_Family.pkl"), joblib.load("Scaler_White.pkl"), "White"
     
     else:
         return None, None, "Unknown"
