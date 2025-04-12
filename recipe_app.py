@@ -49,7 +49,7 @@ def load_model(L, a, b):
         return joblib.load("Purple_Family.pkl"), joblib.load("Scaler_Purple.pkl"), "Purple"
     elif 20 <= L <= 55 and 10 <= a <= 30 and 10 <= b <= 40:
         return joblib.load("Brown_Family.pkl"), joblib.load("Scaler_Brown.pkl"), "Brown"
-    elif 65 <= L <= 100 and 20 <= a <= 50 and 0 <= b <= 30:
+    elif 65 <= L <= 100 and 20 <= a <= 10 and -10 <= b <= 10:
         return joblib.load("Gray_Family.pkl"), joblib.load("Scaler_Gray.pkl"), "Gray"
     elif 0 <= L <= 25 and -10 <= a <= 10 and -10 <= b <= 10:
         return joblib.load("Black_Family.pkl"), joblib.load("Scaler_Black.pkl"), "Black"
