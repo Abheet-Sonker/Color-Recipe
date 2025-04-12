@@ -100,6 +100,15 @@ if st.button("🔍 Calculate LAB and Match Pigments"):
         st.error("❗ Please upload an image or enter LAB values manually.")
         st.stop()
 
+    # Visualize input LAB color
+    input_lab_patch = np.round(lab_color).astype(np.float32).reshape(1, 1, 3)
+    input_rgb = lab2rgb(input_lab_patch)
+    fig_input, ax_input = plt.subplots(figsize=(2, 2))
+    ax_input.imshow(input_rgb)
+    ax_input.axis('off')
+    ax_input.set_title("Input LAB Color")
+    st.pyplot(fig_input)
+
     model, scaler, color_family = load_model(L, a, b)
     pigment_columns = load_dataset(color_family)
 
@@ -125,7 +134,7 @@ if st.button("🔍 Calculate LAB and Match Pigments"):
             st.markdown(f"**ΔE (CIE76)**: `{delta_e:.2f}`")
             st.markdown(f"**RMSE**: `L* = {rmse[0]:.2f}, a* = {rmse[1]:.2f}, b* = {rmse[2]:.2f}`")
 
-            # Visualization
+            # Visualization of predicted vs target
             converted_predicted_lab = np.round(predicted_lab).astype(np.float32).reshape(1, 1, 3)
             converted_target_lab = np.round(target_lab).astype(np.float32).reshape(1, 1, 3)
 
