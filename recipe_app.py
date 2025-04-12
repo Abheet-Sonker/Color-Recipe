@@ -35,23 +35,23 @@ def extract_avg_lab(pil_image):
 # Load model and scaler based on LAB
 @st.cache_resource
 def load_model(L, a, b):
-    if 30 <= L <= 70 and 40 <= a <= 80 and -10 <= b <= 30:
+    if 30 <= L <= 70 and 40 <= a <= 100 and -10 <= b <= 40:
         return joblib.load("Red_Family.pkl"), joblib.load("Scaler_Red.pkl"), "Red"
-    elif 40 <= L <= 85 and 15 <= a <= 45 and 30 <= b <= 70:
+    elif 50 <= L <= 85 and 20 <= a <= 60 and 30 <= b <= 80:
         return joblib.load("Orange_Family.pkl"), joblib.load("Scaler_Orange.pkl"), "Orange"
-    elif 30 <= L <= 85 and -80 <= a <= -10 and -20 <= b <= 30:
+    elif 30 <= L <= 80 and -80 <= a <= -10 and -30 <= b <= 30:
         return joblib.load("Green_Family.pkl"), joblib.load("Scaler_Green.pkl"), "Green"
-    elif 20 <= L <= 70 and -20 <= a <= 20 and -80 <= b <= -10:
+    elif 20 <= L <= 70 and -20 <= a <= 30 and -100 <= b <= -10:
         return joblib.load("Blue_Family.pkl"), joblib.load("Scaler_Blue.pkl"), "Blue"
-    elif 60 <= L <= 100 and -15 <= a <= 30 and 40 <= b <= 80:
+    elif 60 <= L <= 100 and -10 <= a <= 30 and 40 <= b <= 100:
         return joblib.load("Yellow_Family.pkl"), joblib.load("Scaler_Yellow.pkl"), "Yellow"
-    elif 20 <= L <= 80 and 20 <= a <= 60 and -50 <= b <= -5:
+    elif 20 <= L <= 80 and 20 <= a <= 60 and -60 <= b <= -5:
         return joblib.load("Purple_Family.pkl"), joblib.load("Scaler_Purple.pkl"), "Purple"
-    elif 20 <= L <= 55 and 10 <= a <= 30 and 10 <= b <= 40:
+    elif 20 <= L <= 60 and 10 <= a <= 40 and 10 <= b <= 50:
         return joblib.load("Brown_Family.pkl"), joblib.load("Scaler_Brown.pkl"), "Brown"
-    elif 65 <= L <= 100 and 20 <= a <= 10 and -10 <= b <= 10:
+    elif 20 <= L <= 100 and 20 <= a <= 10 and -10 <= b <= 10:
         return joblib.load("Gray_Family.pkl"), joblib.load("Scaler_Gray.pkl"), "Gray"
-    elif 0 <= L <= 25 and -10 <= a <= 10 and -10 <= b <= 10:
+    elif 0 <= L <= 20 and -5 <= a <= 5 and -5 <= b <= 5:
         return joblib.load("Black_Family.pkl"), joblib.load("Scaler_Black.pkl"), "Black"
     elif 90 <= L <= 100 and -5 <= a <= 5 and -5 <= b <= 5:
         return joblib.load("White_Family.pkl"), joblib.load("Scaler_White.pkl"), "White"
