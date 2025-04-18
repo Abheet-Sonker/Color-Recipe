@@ -121,6 +121,9 @@ else:
 
         color_data.append({'Name': name, 'L': L, 'a': a, 'b': b, 'Qty_kg': qty})
 
+# --- Toggle for showing images ---
+show_images = st.toggle("Show target and predicted color images", value=True)
+
 # --- Optimization Section ---
 results = []
 
@@ -170,24 +173,25 @@ if st.button("🚀 Generate Recipes and Export Excel"):
 
             results.append(row)
 
-            # Visualize LAB Target vs Prediction
-            target_lab_patch = np.round(lab).astype(np.float32).reshape(1, 1, 3)
-            predicted_lab_patch = np.round(predicted_lab).astype(np.float32).reshape(1, 1, 3)
+            # Visualize LAB Target vs Prediction, only if toggle is on
+            if show_images:
+                target_lab_patch = np.round(lab).astype(np.float32).reshape(1, 1, 3)
+                predicted_lab_patch = np.round(predicted_lab).astype(np.float32).reshape(1, 1, 3)
 
-            target_rgb = lab2rgb(target_lab_patch)
-            predicted_rgb = lab2rgb(predicted_lab_patch)
-            fig, ax = plt.subplots(1, 2, figsize=(6, 1))
-            ax[0].imshow(target_rgb)
-            ax[0].set_title('Target')
-            ax[0].axis('off')
-            
-            ax[1].imshow(predicted_rgb)
-            ax[1].set_title('Predicted')
-            ax[1].axis('off')
-            
-            plt.tight_layout(pad=0.01)
-            st.markdown(f"##### 🔍 {color['Name']} – ΔE = `{delta_e:.2f}`")
-            st.pyplot(fig)
+                target_rgb = lab2rgb(target_lab_patch)
+                predicted_rgb = lab2rgb(predicted_lab_patch)
+                fig, ax = plt.subplots(1, 2, figsize=(6, 1))
+                ax[0].imshow(target_rgb)
+                ax[0].set_title('Target')
+                ax[0].axis('off')
+                
+                ax[1].imshow(predicted_rgb)
+                ax[1].set_title('Predicted')
+                ax[1].axis('off')
+                
+                plt.tight_layout(pad=0.01)
+                st.markdown(f"##### 🔍 {color['Name']} – ΔE = `{delta_e:.2f}`")
+                st.pyplot(fig)
 
         else:
             st.warning(f"❌ Optimization failed for '{color['Name']}'.")
