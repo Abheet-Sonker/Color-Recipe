@@ -9,7 +9,7 @@ from sklearn.metrics import mean_squared_error
 from skimage.color import lab2rgb
 import matplotlib.pyplot as plt
 
-# --- Excel Export Helper (Placed early to avoid error) ---
+# --- Excel Export Helper ---
 @st.cache_data
 def convert_df_to_excel(df):
     from io import BytesIO
@@ -74,19 +74,45 @@ def optimize_pigments(target_lab, model, scaler, pigment_columns):
     return result
 
 # --- Input Section ---
-st.markdown("### 🧾 Input Multiple Target LAB Colors and Quantities")
+st.markdown("### 📁 Optional Excel Input")
+input_method = st.radio("Choose input method:", 
+                       ["Upload Excel File", "Manual Input"], 
+                       index=1)
 
-num_rows = st.number_input("How many target colors do you want to enter?", min_value=1, max_value=20, value=1)
 color_data = []
 
-for i in range(int(num_rows)):
-    st.markdown(f"#### 🎯 Target Color {i+1}")
-    name = st.text_input(f"Color Name", key=f"name_{i}")
-    qty = st.number_input(f"Quantity to produce (kg)", min_value=0.1, value=1.0, key=f"qty_{i}")
-    L = st.number_input(f"L*", min_value=0.0, max_value=100.0, step=0.1, key=f"L_{i}")
-    a = st.number_input(f"a*", min_value=-128.0, max_value=127.0, step=0.1, key=f"a_{i}")
-    b = st.number_input(f"b*", min_value=-128.0, max_value=127.0, step=0.1, key=f"b_{i}")
-    color_data.append({'Name': name, 'L': L, 'a': a, 'b': b, 'Qty_kg': qty})
+if input_method == "Upload Excel File":
+    uploaded_file = st.file_uploader("Upload Excel file (columns: Name, L, a, b, Qty_kg)", type="xlsx")
+    
+    if uploaded_file:
+        try:
+            df_upload = pd.read_excel(uploaded_file)
+            required_cols = ['Name', 'L', 'a', 'b', 'Qty_kg']
+            
+            if all(col in df_upload.columns for col in required_cols):
+                color_data = df_upload[required_cols].to_dict('records')
+                st.success(f"✅ Successfully loaded {len(color_data)} colors from file!")
+                
+                with st.expander("Preview uploaded data"):
+                    st.dataframe(df_upload[required_cols])
+            else:
+                st.error("❌ Missing required columns. Needed columns: Name, L, a, b, Qty_kg")
+                
+        except Exception as e:
+            st.error(f"❌ Error reading file: {str(e)}")
+else:
+    # --- Manual Input Section ---
+    st.markdown("### 🧾 Input Multiple Target LAB Colors and Quantities")
+    num_rows = st.number_input("How many target colors do you want to enter?", min_value=1, max_value=20, value=1)
+    
+    for i in range(int(num_rows)):
+        st.markdown(f"#### 🎯 Target Color {i+1}")
+        name = st.text_input(f"Color Name", key=f"name_{i}")
+        qty = st.number_input(f"Quantity to produce (kg)", min_value=0.1, value=1.0, key=f"qty_{i}")
+        L = st.number_input(f"L*", min_value=0.0, max_value=100.0, step=0.1, key=f"L_{i}")
+        a = st.number_input(f"a*", min_value=-128.0, max_value=127.0, step=0.1, key=f"a_{i}")
+        b = st.number_input(f"b*", min_value=-128.0, max_value=127.0, step=0.1, key=f"b_{i}")
+        color_data.append({'Name': name, 'L': L, 'a': a, 'b': b, 'Qty_kg': qty})
 
 # --- Optimization Section ---
 results = []
@@ -129,7 +155,6 @@ if st.button("🚀 Generate Recipes and Export Excel"):
             }
 
             for p, qty_kg in zip(pigment_columns, pigment_kg):
-                # Always rename pigment columns to (kg)
                 if '(%)' in p:
                     kg_column = p.replace('(%)', '(kg)')
                 else:
@@ -145,8 +170,7 @@ if st.button("🚀 Generate Recipes and Export Excel"):
             target_rgb = lab2rgb(target_lab_patch)
             predicted_rgb = lab2rgb(predicted_lab_patch)
 
-            fig, ax = plt.subplots(1, 2, figsize=(6, 1))  # Slightly taller for better aspect ratio
-
+            fig, ax = plt.subplots(1, 2, figsize=(6, 1))
             ax[0].imshow(target_rgb)
             ax[0].set_title('Target')
             ax[0].axis('off')
@@ -155,11 +179,9 @@ if st.button("🚀 Generate Recipes and Export Excel"):
             ax[1].set_title('Predicted')
             ax[1].axis('off')
             
-            plt.tight_layout(pad=0.01)  # Ensures best fit of patches
-            
+            plt.tight_layout(pad=0.01)
             st.markdown(f"##### 🔍 {color['Name']} – ΔE = `{delta_e:.2f}`")
             st.pyplot(fig)
-
 
         else:
             st.warning(f"❌ Optimization failed for '{color['Name']}'.")
@@ -169,4 +191,6 @@ if st.button("🚀 Generate Recipes and Export Excel"):
         st.dataframe(df_results)
         st.success("✅ All recipes generated successfully!")
         excel_data = convert_df_to_excel(df_results)
-        st.download_button("📥 Download Excel", data=excel_data, file_name="Pigment_Recipes.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        st.download_button("📥 Download Excel", data=excel_data, 
+                          file_name="Pigment_Recipes.xlsx", 
+                          mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
