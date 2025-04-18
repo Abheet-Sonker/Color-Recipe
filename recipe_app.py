@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title="Color Recipe Optimizer", layout="wide")
 st.title("🎨 Color Recipe Optimizer (Multi-Color with Excel Export)")
 
-# LAB-based model loader
+# --- Color Family Based Model Loader ---
 @st.cache_resource
 def load_model(L, a, b):
     if 30 <= L <= 70 and 40 <= a <= 100 and -10 <= b <= 40:
@@ -63,7 +63,16 @@ def optimize_pigments(target_lab, model, scaler, pigment_columns):
     result = minimize(loss_function, initial_guess, method='SLSQP', bounds=bounds, constraints=constraints)
     return result
 
-# --- Main Input Section ---
+# --- Excel Export Helper ---
+@st.cache_data
+def convert_df_to_excel(df):
+    from io import BytesIO
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Pigment Recipes')
+    return output.getvalue()
+
+# --- Input Section ---
 st.markdown("### 🧾 Input Multiple Target LAB Colors and Quantities")
 
 num_rows = st.number_input("How many target colors do you want to enter?", min_value=1, max_value=20, value=1)
@@ -78,7 +87,7 @@ for i in range(int(num_rows)):
     b = st.number_input(f"b*", min_value=-128.0, max_value=127.0, step=0.1, key=f"b_{i}")
     color_data.append({'Name': name, 'L': L, 'a': a, 'b': b, 'Qty_kg': qty})
 
-# --- Optimization + Export ---
+# --- Optimization ---
 results = []
 
 if st.button("🚀 Generate Recipes and Export Excel"):
@@ -99,35 +108,56 @@ if st.button("🚀 Generate Recipes and Export Excel"):
             optimized_pct = result.x
             pigment_kg = optimized_pct * (color['Qty_kg'] / 100)
 
+            predicted_lab_scaled = model.predict([optimized_pct])[0]
+            predicted_lab = scaler.inverse_transform(predicted_lab_scaled.reshape(1, -1))[0]
+            delta_e = delta_e_cie76(lab.flatten(), predicted_lab)
+            rmse = np.sqrt(mean_squared_error(lab, predicted_lab.reshape(1, -1), multioutput='raw_values'))
+
             row = {
                 'Name': color['Name'],
-                'L*': L,
-                'a*': a,
-                'b*': b,
+                'L*': L, 'a*': a, 'b*': b,
                 'Qty (kg)': color['Qty_kg'],
-                'Color Family': color_family
+                'Color Family': color_family,
+                'Pred L*': round(predicted_lab[0], 2),
+                'Pred a*': round(predicted_lab[1], 2),
+                'Pred b*': round(predicted_lab[2], 2),
+                'ΔE': round(delta_e, 2),
+                'RMSE_L': round(rmse[0], 2),
+                'RMSE_a': round(rmse[1], 2),
+                'RMSE_b': round(rmse[2], 2)
             }
 
             for p, qty_kg in zip(pigment_columns, pigment_kg):
                 row[p] = round(qty_kg, 3)
 
             results.append(row)
+
+            # Show color comparison
+            target_lab_patch = np.round(lab).astype(np.float32).reshape(1, 1, 3)
+            predicted_lab_patch = np.round(predicted_lab).astype(np.float32).reshape(1, 1, 3)
+
+            target_rgb = lab2rgb(target_lab_patch)
+            predicted_rgb = lab2rgb(predicted_lab_patch)
+
+            fig, ax = plt.subplots(1, 2, figsize=(6, 3))
+            ax[0].imshow(target_rgb)
+            ax[0].set_title('🎯 Target')
+            ax[0].axis('off')
+
+            ax[1].imshow(predicted_rgb)
+            ax[1].set_title('🎨 Predicted')
+            ax[1].axis('off')
+
+            st.markdown(f"##### 🎯 {color['Name']} – ΔE = `{delta_e:.2f}`")
+            st.pyplot(fig)
+
         else:
             st.warning(f"❌ Optimization failed for '{color['Name']}'.")
 
-    # Show and export results
     if results:
         df_results = pd.DataFrame(results)
         st.success("✅ Recipes generated successfully!")
         st.dataframe(df_results)
 
-        @st.cache_data
-        def convert_df_to_excel(df):
-            from io import BytesIO
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                df.to_excel(writer, index=False, sheet_name='Pigment Recipes')
-            return output.getvalue()
-
         excel_data = convert_df_to_excel(df_results)
-        st.download_button("📥 Download Excel File", data=excel_data, file_name="Pigment_Recipes.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        st.download_button("📥 Download Excel", data=excel_data, file_name="Pigment_Recipes.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
