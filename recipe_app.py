@@ -9,10 +9,20 @@ from sklearn.metrics import mean_squared_error
 from skimage.color import lab2rgb
 import matplotlib.pyplot as plt
 
+# --- Excel Export Helper (DEFINE EARLY!) ---
+@st.cache_data
+def convert_df_to_excel(df):
+    from io import BytesIO
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Pigment Recipes')
+    return output.getvalue()
+
+# --- Streamlit Page Setup ---
 st.set_page_config(page_title="Color Recipe Optimizer", layout="wide")
 st.title("🎨 Color Recipe Optimizer (Multi-Color with Excel Export)")
 
-# --- Color Family Based Model Loader ---
+# --- Load model based on LAB range ---
 @st.cache_resource
 def load_model(L, a, b):
     if 30 <= L <= 70 and 40 <= a <= 100 and -10 <= b <= 40:
@@ -63,15 +73,6 @@ def optimize_pigments(target_lab, model, scaler, pigment_columns):
     result = minimize(loss_function, initial_guess, method='SLSQP', bounds=bounds, constraints=constraints)
     return result
 
-# --- Excel Export Helper ---
-@st.cache_data
-def convert_df_to_excel(df):
-    from io import BytesIO
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Pigment Recipes')
-    return output.getvalue()
-
 # --- Input Section ---
 st.markdown("### 🧾 Input Multiple Target LAB Colors and Quantities")
 
@@ -87,7 +88,7 @@ for i in range(int(num_rows)):
     b = st.number_input(f"b*", min_value=-128.0, max_value=127.0, step=0.1, key=f"b_{i}")
     color_data.append({'Name': name, 'L': L, 'a': a, 'b': b, 'Qty_kg': qty})
 
-# --- Optimization ---
+# --- Optimization Section ---
 results = []
 
 if st.button("🚀 Generate Recipes and Export Excel"):
@@ -132,14 +133,14 @@ if st.button("🚀 Generate Recipes and Export Excel"):
 
             results.append(row)
 
-            # Show color comparison
+            # Visualize LAB Target vs Prediction
             target_lab_patch = np.round(lab).astype(np.float32).reshape(1, 1, 3)
             predicted_lab_patch = np.round(predicted_lab).astype(np.float32).reshape(1, 1, 3)
 
             target_rgb = lab2rgb(target_lab_patch)
             predicted_rgb = lab2rgb(predicted_lab_patch)
 
-            fig, ax = plt.subplots(1, 2, figsize=(4, 2))
+            fig, ax = plt.subplots(1, 2, figsize=(6, 3))
             ax[0].imshow(target_rgb)
             ax[0].set_title('🎯 Target')
             ax[0].axis('off')
@@ -148,7 +149,7 @@ if st.button("🚀 Generate Recipes and Export Excel"):
             ax[1].set_title('🎨 Predicted')
             ax[1].axis('off')
 
-            st.markdown(f"##### 🎯 {color['Name']} – ΔE = `{delta_e:.2f}`")
+            st.markdown(f"##### 🔍 {color['Name']} – ΔE = `{delta_e:.2f}`")
             st.pyplot(fig)
 
         else:
@@ -156,7 +157,7 @@ if st.button("🚀 Generate Recipes and Export Excel"):
 
     if results:
         df_results = pd.DataFrame(results)
-        st.success("✅ Recipes generated successfully!")
+        st.success("✅ All recipes generated successfully!")
         st.dataframe(df_results)
 
         excel_data = convert_df_to_excel(df_results)
