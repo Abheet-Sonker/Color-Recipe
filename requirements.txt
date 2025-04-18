@@ -8,3 +8,4 @@ scikit-learn
 scipy
 matplotlib
 scikit-image
+xlsxwriter
