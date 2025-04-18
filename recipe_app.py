@@ -9,30 +9,10 @@ from sklearn.metrics import mean_squared_error
 from skimage.color import lab2rgb
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Color Recipe Optimizer", layout="centered")
-st.title("🎨 Color Recipe Optimizer (Using Trained Models)")
+st.set_page_config(page_title="Color Recipe Optimizer", layout="wide")
+st.title("🎨 Color Recipe Optimizer (Multi-Color with Excel Export)")
 
-# Upload image or manual LAB
-st.markdown("### 🖼️ Input Options (Upload Image or Enter LAB Values)")
-
-uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
-
-manual_L = st.number_input("L*", min_value=0.0, max_value=100.0, step=0.1, format="%.2f")
-manual_a = st.number_input("a*", min_value=-128.0, max_value=127.0, step=0.1, format="%.2f")
-manual_b = st.number_input("b*", min_value=-128.0, max_value=127.0, step=0.1, format="%.2f")
-
-# Helper function to convert image to LAB
-def extract_avg_lab(pil_image):
-    img = np.array(pil_image)
-    img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    lab_img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2LAB)
-    avg_lab = np.mean(lab_img.reshape(-1, 3), axis=0)
-    L = (avg_lab[0] / 255) * 100
-    a = avg_lab[1] - 128
-    b = avg_lab[2] - 128
-    return np.array([[L, a, b]], dtype=np.float32), L, a, b
-
-# Load model and scaler based on LAB
+# LAB-based model loader
 @st.cache_resource
 def load_model(L, a, b):
     if 30 <= L <= 70 and 40 <= a <= 100 and -10 <= b <= 40:
@@ -60,11 +40,9 @@ def load_model(L, a, b):
 
 @st.cache_data
 def load_dataset(color_family):
-    filename = f"{color_family}_family_dataset.csv"
     try:
-        df = pd.read_csv(filename)
-        pigment_columns = [col for col in df.columns if col.startswith("Pigment")]
-        return pigment_columns
+        df = pd.read_csv(f"{color_family}_family_dataset.csv")
+        return [col for col in df.columns if col.startswith("Pigment")]
     except:
         return []
 
@@ -83,73 +61,73 @@ def optimize_pigments(target_lab, model, scaler, pigment_columns):
     bounds = [(0, 100) for _ in pigment_columns]
 
     result = minimize(loss_function, initial_guess, method='SLSQP', bounds=bounds, constraints=constraints)
-    return result, target_lab
+    return result
 
-# Main app logic
-if st.button("🔍 Calculate LAB and Match Pigments"):
-    if uploaded_file:
-        pil_image = Image.open(uploaded_file).convert('RGB')
-        st.image(pil_image, caption="Uploaded Image", use_column_width=True)
-        lab_color, L, a, b = extract_avg_lab(pil_image)
-        st.markdown(f"**🎯 Average LAB Color from Image:** `L* = {L:.2f}, a* = {a:.2f}, b* = {b:.2f}`")
-    elif any([manual_L, manual_a, manual_b]):
-        lab_color = np.array([[manual_L, manual_a, manual_b]], dtype=np.float32)
-        L, a, b = manual_L, manual_a, manual_b
-        st.markdown(f"**🎯 Manual LAB Input:** `L* = {L:.2f}, a* = {a:.2f}, b* = {b:.2f}`")
-    else:
-        st.error("❗ Please upload an image or enter LAB values manually.")
-        st.stop()
+# --- Main Input Section ---
+st.markdown("### 🧾 Input Multiple Target LAB Colors and Quantities")
 
-    # Visualize input LAB color
-    input_lab_patch = np.round(lab_color).astype(np.float32).reshape(1, 1, 3)
-    input_rgb = lab2rgb(input_lab_patch)
-    fig_input, ax_input = plt.subplots(figsize=(2, 2))
-    ax_input.imshow(input_rgb)
-    ax_input.axis('off')
-    ax_input.set_title("Input LAB Color")
-    st.pyplot(fig_input)
+num_rows = st.number_input("How many target colors do you want to enter?", min_value=1, max_value=20, value=1)
+color_data = []
 
-    model, scaler, color_family = load_model(L, a, b)
-    pigment_columns = load_dataset(color_family)
+for i in range(int(num_rows)):
+    st.markdown(f"#### 🎯 Target Color {i+1}")
+    name = st.text_input(f"Color Name", key=f"name_{i}")
+    qty = st.number_input(f"Quantity to produce (kg)", min_value=0.1, value=1.0, key=f"qty_{i}")
+    L = st.number_input(f"L*", min_value=0.0, max_value=100.0, step=0.1, key=f"L_{i}")
+    a = st.number_input(f"a*", min_value=-128.0, max_value=127.0, step=0.1, key=f"a_{i}")
+    b = st.number_input(f"b*", min_value=-128.0, max_value=127.0, step=0.1, key=f"b_{i}")
+    color_data.append({'Name': name, 'L': L, 'a': a, 'b': b, 'Qty_kg': qty})
 
-    if model is None or not pigment_columns:
-        st.error("❌ Could not determine a matching color family or load required model/data.")
-    else:
-        st.success(f"🎨 Detected Color Family: **{color_family}**")
-        result, target_lab = optimize_pigments(lab_color, model, scaler, pigment_columns)
+# --- Optimization + Export ---
+results = []
+
+if st.button("🚀 Generate Recipes and Export Excel"):
+    for color in color_data:
+        L, a, b = color['L'], color['a'], color['b']
+        lab = np.array([[L, a, b]], dtype=np.float32)
+
+        model, scaler, color_family = load_model(L, a, b)
+        pigment_columns = load_dataset(color_family)
+
+        if model is None or not pigment_columns:
+            st.warning(f"⚠️ Skipped '{color['Name']}' – Unknown color family.")
+            continue
+
+        result = optimize_pigments(lab, model, scaler, pigment_columns)
 
         if result.success:
-            optimal_pigments = result.x
-            predicted_lab_scaled = model.predict([optimal_pigments])[0]
-            predicted_lab = scaler.inverse_transform(predicted_lab_scaled.reshape(1, -1))[0]
-            delta_e = delta_e_cie76(lab_color.flatten(), predicted_lab)
-            rmse = np.sqrt(mean_squared_error(lab_color, predicted_lab.reshape(1, -1), multioutput='raw_values'))
+            optimized_pct = result.x
+            pigment_kg = optimized_pct * (color['Qty_kg'] / 100)
 
-            st.subheader("🧪 Optimal Pigment Recipe:")
-            for name, pct in zip(pigment_columns, optimal_pigments):
-                st.markdown(f"- **{name}**: {pct:.2f}%")
+            row = {
+                'Name': color['Name'],
+                'L*': L,
+                'a*': a,
+                'b*': b,
+                'Qty (kg)': color['Qty_kg'],
+                'Color Family': color_family
+            }
 
-            st.subheader("📊 Prediction & Accuracy:")
-            st.markdown(f"**Predicted LAB**: `L* = {predicted_lab[0]:.2f}, a* = {predicted_lab[1]:.2f}, b* = {predicted_lab[2]:.2f}`")
-            st.markdown(f"**ΔE (CIE76)**: `{delta_e:.2f}`")
-            st.markdown(f"**RMSE**: `L* = {rmse[0]:.2f}, a* = {rmse[1]:.2f}, b* = {rmse[2]:.2f}`")
+            for p, qty_kg in zip(pigment_columns, pigment_kg):
+                row[p] = round(qty_kg, 3)
 
-            # Visualization of predicted vs target
-            converted_predicted_lab = np.round(predicted_lab).astype(np.float32).reshape(1, 1, 3)
-            converted_target_lab = np.round(target_lab).astype(np.float32).reshape(1, 1, 3)
-
-            rgb_color1 = lab2rgb(converted_target_lab)
-            rgb_color2 = lab2rgb(converted_predicted_lab)
-
-            fig, ax = plt.subplots(1, 2, figsize=(10, 5))
-            ax[0].imshow(rgb_color1)
-            ax[0].axis('off')
-            ax[0].set_title('Target Color')
-
-            ax[1].imshow(rgb_color2)
-            ax[1].axis('off')
-            ax[1].set_title('Predicted Color')
-
-            st.pyplot(fig)
+            results.append(row)
         else:
-            st.error("❌ Optimization failed to converge. Try another image or LAB values.")
+            st.warning(f"❌ Optimization failed for '{color['Name']}'.")
+
+    # Show and export results
+    if results:
+        df_results = pd.DataFrame(results)
+        st.success("✅ Recipes generated successfully!")
+        st.dataframe(df_results)
+
+        @st.cache_data
+        def convert_df_to_excel(df):
+            from io import BytesIO
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                df.to_excel(writer, index=False, sheet_name='Pigment Recipes')
+            return output.getvalue()
+
+        excel_data = convert_df_to_excel(df_results)
+        st.download_button("📥 Download Excel File", data=excel_data, file_name="Pigment_Recipes.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
