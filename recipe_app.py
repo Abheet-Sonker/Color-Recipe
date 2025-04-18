@@ -155,7 +155,7 @@ if st.button("🚀 Generate Recipes and Export Excel"):
             ax[1].set_title('Predicted')
             ax[1].axis('off')
             
-            plt.tight_layout(pad=0.9)  # Ensures best fit of patches
+            plt.tight_layout(pad=0.01)  # Ensures best fit of patches
             
             st.markdown(f"##### 🔍 {color['Name']} – ΔE = `{delta_e:.2f}`")
             st.pyplot(fig)
