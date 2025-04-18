@@ -145,7 +145,7 @@ if st.button("🚀 Generate Recipes and Export Excel"):
             target_rgb = lab2rgb(target_lab_patch)
             predicted_rgb = lab2rgb(predicted_lab_patch)
 
-            fig, ax = plt.subplots(1, 2, figsize=(6, 3))
+            fig, ax = plt.subplots(1, 2, figsize=(6, 1))
             ax[0].imshow(target_rgb)
             ax[0].set_title('Target')
             ax[0].axis('off')
