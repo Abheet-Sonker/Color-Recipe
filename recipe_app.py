@@ -142,11 +142,11 @@ if st.button("🚀 Generate Recipes and Export Excel"):
 
             fig, ax = plt.subplots(1, 2, figsize=(6, 3))
             ax[0].imshow(target_rgb)
-            ax[0].set_title('🎯 Target')
+            ax[0].set_title('Target')
             ax[0].axis('off')
 
             ax[1].imshow(predicted_rgb)
-            ax[1].set_title('🎨 Predicted')
+            ax[1].set_title('Predicted')
             ax[1].axis('off')
 
             st.markdown(f"##### 🔍 {color['Name']} – ΔE = `{delta_e:.2f}`")
@@ -157,8 +157,7 @@ if st.button("🚀 Generate Recipes and Export Excel"):
 
     if results:
         df_results = pd.DataFrame(results)
-        st.success("✅ All recipes generated successfully!")
         st.dataframe(df_results)
-
+        st.success("✅ All recipes generated successfully!")
         excel_data = convert_df_to_excel(df_results)
         st.download_button("📥 Download Excel", data=excel_data, file_name="Pigment_Recipes.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
