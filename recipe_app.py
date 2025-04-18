@@ -145,17 +145,21 @@ if st.button("🚀 Generate Recipes and Export Excel"):
             target_rgb = lab2rgb(target_lab_patch)
             predicted_rgb = lab2rgb(predicted_lab_patch)
 
-            fig, ax = plt.subplots(1, 2, figsize=(6, 1))
+            fig, ax = plt.subplots(1, 2, figsize=(6, 1.5))  # Slightly taller for better aspect ratio
+
             ax[0].imshow(target_rgb)
             ax[0].set_title('Target')
             ax[0].axis('off')
-
+            
             ax[1].imshow(predicted_rgb)
             ax[1].set_title('Predicted')
             ax[1].axis('off')
-
+            
+            plt.tight_layout()  # Ensures best fit of patches
+            
             st.markdown(f"##### 🔍 {color['Name']} – ΔE = `{delta_e:.2f}`")
             st.pyplot(fig)
+
 
         else:
             st.warning(f"❌ Optimization failed for '{color['Name']}'.")
