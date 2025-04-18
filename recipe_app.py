@@ -9,14 +9,7 @@ from sklearn.metrics import mean_squared_error
 from skimage.color import lab2rgb
 import matplotlib.pyplot as plt
 
-@st.cache_data
-def convert_df_to_excel(df):
-    from io import BytesIO
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Pigment Recipes')
-    return output.getvalue()
-# --- Excel Export Helper (DEFINE EARLY!) ---
+# --- Excel Export Helper (Placed early to avoid error) ---
 @st.cache_data
 def convert_df_to_excel(df):
     from io import BytesIO
