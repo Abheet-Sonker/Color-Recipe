@@ -114,7 +114,7 @@ if st.button("🚀 Generate Recipes and Export Excel"):
             delta_e = delta_e_cie76(lab.flatten(), predicted_lab)
             rmse = np.sqrt(mean_squared_error(lab, predicted_lab.reshape(1, -1), multioutput='raw_values'))
 
-           row = {
+            row = {
                 'Name': color['Name'],
                 'L*': L, 'a*': a, 'b*': b,
                 'Qty (kg)': color['Qty_kg'],
@@ -129,12 +129,14 @@ if st.button("🚀 Generate Recipes and Export Excel"):
             }
 
             for p, qty_kg in zip(pigment_columns, pigment_kg):
-                # Replace percentage indication with kg in column name
-                kg_column = p.replace('(%)', '(kg)')  # Update column name
-                row[kg_column] = round(qty_kg, 3)  # Store actual kg values
+                # Always rename pigment columns to (kg)
+                if '(%)' in p:
+                    kg_column = p.replace('(%)', '(kg)')
+                else:
+                    kg_column = p + ' (kg)'
+                row[kg_column] = round(qty_kg, 3)
 
             results.append(row)
-
 
             # Visualize LAB Target vs Prediction
             target_lab_patch = np.round(lab).astype(np.float32).reshape(1, 1, 3)
