@@ -109,9 +109,16 @@ else:
         st.markdown(f"#### 🎯 Target Color {i+1}")
         name = st.text_input(f"Color Name", key=f"name_{i}")
         qty = st.number_input(f"Quantity to produce (kg)", min_value=0.1, value=1.0, key=f"qty_{i}")
-        L = st.number_input(f"L*", min_value=0.0, max_value=100.0, step=0.1, key=f"L_{i}")
-        a = st.number_input(f"a*", min_value=-128.0, max_value=127.0, step=0.1, key=f"a_{i}")
-        b = st.number_input(f"b*", min_value=-128.0, max_value=127.0, step=0.1, key=f"b_{i}")
+
+        # --- L, a, b side by side with low width ---
+        col_L, col_a, col_b = st.columns([1, 1, 1])
+        with col_L:
+            L = st.number_input("L*", min_value=0.0, max_value=100.0, step=0.1, key=f"L_{i}")
+        with col_a:
+            a = st.number_input("a*", min_value=-128.0, max_value=127.0, step=0.1, key=f"a_{i}")
+        with col_b:
+            b = st.number_input("b*", min_value=-128.0, max_value=127.0, step=0.1, key=f"b_{i}")
+
         color_data.append({'Name': name, 'L': L, 'a': a, 'b': b, 'Qty_kg': qty})
 
 # --- Optimization Section ---
@@ -169,7 +176,6 @@ if st.button("🚀 Generate Recipes and Export Excel"):
 
             target_rgb = lab2rgb(target_lab_patch)
             predicted_rgb = lab2rgb(predicted_lab_patch)
-
             fig, ax = plt.subplots(1, 2, figsize=(6, 1))
             ax[0].imshow(target_rgb)
             ax[0].set_title('Target')
